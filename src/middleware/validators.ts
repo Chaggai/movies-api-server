@@ -2,12 +2,12 @@ import { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
 import Joi, { ObjectSchema } from "joi";
 import { joiPasswordExtendCore } from "joi-password";
-import createHttpError from "http-errors";
+import createError from "http-errors";
 
 const joiPassword = Joi.extend(joiPasswordExtendCore);
 
-import { UserDocument } from "../api/Models/user.model";
-import { MovieDocument } from "../api/Models/movie.model";
+import { UserDocument } from "../api/models/user.model";
+import { MovieDocument } from "../api/models/movie.model";
 
 export const schemasValidator = (schema: ObjectSchema) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -17,7 +17,7 @@ export const schemasValidator = (schema: ObjectSchema) => {
     } catch (error) {
       const err = error as Error;
 
-      next(createHttpError(422, err.message));
+      next(createError.UnprocessableEntity(err.message));
     }
   };
 };
@@ -76,7 +76,7 @@ export const idValidator = (
   const { id } = req.params;
 
   if (!mongoose.isValidObjectId(id)) {
-    return next(createHttpError(400, "Invalid ObjectId"));
+    return next(createError.BadRequest("Invalid ObjectId"));
   }
   next();
 };

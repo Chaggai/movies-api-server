@@ -1,12 +1,12 @@
 import express from "express";
 
 import {
-  createUser,
-  deleteUser,
-  login,
-  readAllUsers,
-  readUser,
-  updateUser,
+  createUserHandler,
+  getAllUsersHandler,
+  loginHandler,
+  updateUserHandler,
+  getOneUserHandler,
+  deleteUserHandler,
 } from "../controllers/user.controllers";
 
 import {
@@ -22,22 +22,22 @@ router.post(
   "/create",
   verifyAdmin,
   schemasValidator(Schemas.user.create),
-  createUser
+  createUserHandler
 );
 
-router.get("/get", verifyToken, readAllUsers);
+router.get("/get", verifyToken, getAllUsersHandler);
 
-router.get("/get/:id", verifyToken, idValidator, readUser);
+router.get("/get/:id", verifyToken, idValidator, getOneUserHandler);
 
 router.put(
   "/update/:id",
   verifyAdmin,
   idValidator,
   schemasValidator(Schemas.user.update),
-  updateUser
+  updateUserHandler
 );
 
-router.delete("/delete/:id", verifyAdmin, idValidator, deleteUser);
-router.post("/login", schemasValidator(Schemas.user.login), login);
+router.delete("/delete/:id", verifyAdmin, idValidator, deleteUserHandler);
+router.post("/login", schemasValidator(Schemas.user.login), loginHandler);
 
 export default router;

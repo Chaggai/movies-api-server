@@ -1,5 +1,5 @@
 import "dotenv/config";
-import createHttpError from "http-errors";
+import createError from "http-errors";
 import mongoose from "mongoose";
 
 import env from "./utils/validateEnv";
@@ -22,4 +22,4 @@ mongoose
       console.log(`Server running on port ${PORT}`);
     });
   })
-  .catch((error: Error) => createHttpError(500, error.message));
+  .catch((error: Error) => createError.InternalServerError);

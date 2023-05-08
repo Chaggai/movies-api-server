@@ -1,6 +1,6 @@
-import createHttpError from "http-errors";
+import createError from "http-errors";
 import { NextFunction, Request, RequestHandler, Response } from "express";
-import userModel, { Permissions, UserDocument } from "../api/Models/user.model";
+import userModel, { Permissions, UserDocument } from "../api/models/user.model";
 import { verifyJwt } from "../utils/jwt";
 
 interface Indexed extends Request {
@@ -11,7 +11,7 @@ export const verifyToken: RequestHandler = async (req: Indexed, res, next) => {
   const { authorization } = req.headers;
 
   if (!authorization) {
-    return next(createHttpError(401, "Unauthorized request"));
+    return next(createError.Unauthorized());
   }
 
   const [, token] = authorization.split(" ");
@@ -19,7 +19,7 @@ export const verifyToken: RequestHandler = async (req: Indexed, res, next) => {
   try {
     const { valid, decoded } = verifyJwt(token);
     if (!valid) {
-      return next(createHttpError(401, "Invalid token"));
+      return next(createError.Unauthorized());
     }
     const { id } = decoded as { id: string };
 
@@ -34,7 +34,7 @@ export const verifyToken: RequestHandler = async (req: Indexed, res, next) => {
 export const verifyAdmin: RequestHandler = async (req: Indexed, res, next) => {
   verifyToken(req, res, () => {
     if (!req.user?.isAdmin) {
-      return next(createHttpError(401, "Unauthorized request"));
+      return next(createError.Unauthorized());
     }
     next();
   });
@@ -47,7 +47,7 @@ export const verifyPermission =
       const user: UserDocument = req.user;
       const verified = user?.permissions?.some((per) => per === permission);
       if (!verified) {
-        return next(createHttpError(401, "Unauthorized request!"));
+        return next(createError.Unauthorized());
       }
       next();
     });

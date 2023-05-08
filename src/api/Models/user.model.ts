@@ -1,4 +1,4 @@
-import { Document, Schema, model } from "mongoose";
+import { Document, ObjectId, Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 
 export enum Permissions {
@@ -6,13 +6,16 @@ export enum Permissions {
   DELETE = "delete",
 }
 
-export interface UserDocument extends Document {
+export interface UserInput {
   username: string;
   password: string;
   firstname: string;
   lastname: string;
   isAdmin: boolean;
   permissions: Permissions[];
+}
+
+export interface UserDocument extends UserInput, Document<ObjectId> {
   comparePasswords(password: string): Promise<boolean>;
 }
 
@@ -28,13 +31,16 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
-userSchema.pre("save", async function (next) {
-  const user = this as unknown as UserDocument;
+userSchema.pre("save", async function (this: UserDocument, next) {
+  if (!this.isModified("password")) {
+    return next();
+  }
 
   const salt = await bcrypt.genSalt(10);
-  const hash = await bcrypt.hash(user.password, salt);
-  user.password = hash;
-  user.username = user.username.toLowerCase();
+  const hash = bcrypt.hashSync(this.password, salt);
+
+  this.password = hash;
+  this.username = this.username.toLowerCase();
 
   return next();
 });

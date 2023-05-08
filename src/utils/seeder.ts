@@ -1,7 +1,7 @@
 import axios from "axios";
 
-import userModel from "../api/Models/user.model";
-import movieModel from "../api/Models/movie.model";
+import userModel from "../api/models/user.model";
+import movieModel from "../api/models/movie.model";
 
 interface Movie {
   name: String;

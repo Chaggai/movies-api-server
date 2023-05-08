@@ -1,106 +1,99 @@
 import { RequestHandler } from "express";
-import bcrypt from "bcrypt";
-import createHttpError from "http-errors";
+import { omit } from "lodash";
+import createError from "http-errors";
 
-import userModel, { UserDocument } from "../Models/user.model";
-import { signJwt } from "../../utils/jwt";
+import userModel, { UserDocument } from "../models/user.model";
 import {
-  DupError,
-  createDuplicateKeyError,
-} from "../../utils/createDuplicateKeyError";
+  createUser,
+  deleteUser,
+  getAllUsers,
+  getOneUser,
+  login,
+  updateUser,
+} from "../services/user.srvices";
 
-export const createUser: RequestHandler = async (req, res, next) => {
+export const createUserHandler: RequestHandler = async (req, res, next) => {
   try {
     const exists = await userModel.findOne({
       username: req.body.username.toLowerCase(),
     });
-    if (exists)
+    if (exists) {
       return next(
-        createHttpError(409, `Username ${req.body.username} already in use`)
+        createError.Conflict(`Username ${req.body.username} already in use`)
       );
-
-    const user = new userModel(req.body);
-
-    user.save();
-    res.status(200).json(user);
-  } catch (error) {
-    const err = error as DupError;
-
-    if (err.code === 11000) {
-      const message = createDuplicateKeyError(err);
-      return next(createHttpError(409, message));
     }
-    next(error);
-  }
-};
 
-export const readAllUsers: RequestHandler = async (req, res, next) => {
-  try {
-    const users = await userModel.find({});
-    res.status(200).json(users);
+    const createdUser = await createUser(req.body);
+    res.send(omit(createdUser.toJSON(), "password"));
   } catch (error) {
     next(error);
   }
 };
 
-export const readUser: RequestHandler = async (req, res, next) => {
+export const getAllUsersHandler: RequestHandler = async (req, res, next) => {
   try {
-    const user = await userModel.findById(req.params.id);
-    res.status(200).json(user);
-  } catch (error) {
+    const allUsers = await getAllUsers();
+    const allUsersWithoutPassword = allUsers.map((user) =>
+      omit(user.toJSON(), "password")
+    );
+    res.status(200).send(allUsersWithoutPassword);
+  } catch (error: any) {
     next(error);
   }
 };
 
-export const updateUser: RequestHandler<
+export const getOneUserHandler: RequestHandler = async (req, res, next) => {
+  try {
+    const user = await getOneUser({ _id: req.params.id });
+
+    if (!user) {
+      return next(createError.NotFound("User not found"));
+    }
+
+    res.send(omit(user, "password"));
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+export const updateUserHandler: RequestHandler<
   { id: string },
   unknown,
   UserDocument
 > = async (req, res, next) => {
   try {
-    const { username } = req.body;
-    await userModel.findByIdAndUpdate(req.params.id, {
-      ...req.body,
-      username: username && username.toLowerCase(),
+    await updateUser({ _id: req.params.id }, req.body);
+    res.send("User updated");
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+export const deleteUserHandler: RequestHandler = async (req, res, next) => {
+  try {
+    await deleteUser({ _id: req.params.id });
+    res.send("User deleted");
+  } catch (error: any) {
+    console.log(error);
+    return res.status(409).send(error.message);
+  }
+};
+
+export const loginHandler: RequestHandler<{}, {}, UserDocument> = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const token = await login({
+      username: req.body.username,
+      password: req.body.password,
     });
 
-    res.status(200).json("updated");
-  } catch (error) {
+    res
+      .status(200)
+      .send({ token, user: token.username, isAdmin: token.isAdmin });
+  } catch (error: any) {
     next(error);
   }
-};
-
-export const deleteUser: RequestHandler = async (req, res, next) => {
-  try {
-    await userModel.findByIdAndDelete(req.params.id);
-    res.status(200).json("deleted");
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const login: RequestHandler<
-  unknown,
-  unknown,
-  UserDocument,
-  unknown
-> = async (req, res, next) => {
-  const { username, password } = req.body;
-  const user = await userModel.findOne({ username: username.toLowerCase() });
-  if (!user) {
-    return next(createHttpError(400, "Invalid credentials"));
-  }
-  const match = await user.comparePasswords(password);
-
-  if (!match) {
-    return next(createHttpError(400, "Invalid credentials"));
-  }
-
-  const token = signJwt({ id: user.id });
-
-  res.status(200).json({
-    token,
-    user: user.username,
-    isAdmin: user.isAdmin,
-  });
 };

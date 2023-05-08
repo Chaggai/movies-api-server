@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import createHttpError from "http-errors";
+import createError from "http-errors";
 
 export const notFound = (req: Request, res: Response, next: NextFunction) =>
-  next(createHttpError(404, "Endpoint not found"));
+  next(createError.NotFound("Endpoint not found"));

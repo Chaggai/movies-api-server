@@ -1,6 +1,6 @@
 import { RequestHandler } from "express";
 
-import MovieModel, { MovieDocument } from "../Models/movie.model";
+import MovieModel, { MovieDocument } from "../models/movie.model";
 
 export const createMovie: RequestHandler<
   unknown,

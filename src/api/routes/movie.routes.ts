@@ -13,7 +13,7 @@ import {
   schemasValidator,
 } from "../../middleware/validators";
 import { verifyPermission, verifyToken } from "../../middleware/verifyToken";
-import { Permissions } from "../Models/user.model";
+import { Permissions } from "../models/user.model";
 
 const router = express.Router();
 
