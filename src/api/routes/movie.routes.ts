@@ -1,46 +1,34 @@
 import express from "express";
 
 import {
-  createMovie,
-  readAllMovies,
-  readMovie,
-  updateMovie,
-  deleteMovie,
+  createMovieHandler,
+  getAllMoviesHandler,
+  updateMovieHandler,
+  getOneMovieHandler,
+  deleteMovieHandler,
 } from "../controllers/movie.controllers";
-import {
-  Schemas,
-  idValidator,
-  schemasValidator,
-} from "../../middleware/validators";
-import { verifyPermission, verifyToken } from "../../middleware/verifyToken";
-import { Permissions } from "../models/user.model";
+
+import { idValidator } from "../../middleware/validators";
 
 const router = express.Router();
 
-router.get("/get", verifyToken, readAllMovies);
-
-router.get("/get/:id", verifyToken, idValidator, readMovie);
-
 router.post(
   "/create",
-  verifyPermission(Permissions.CREATE),
-  schemasValidator(Schemas.movie.create),
-  createMovie
+  // verifyAdmin,
+  createMovieHandler
 );
+
+router.get("/get", getAllMoviesHandler);
+
+router.get("/get/:id", idValidator, getOneMovieHandler);
 
 router.put(
   "/update/:id",
+  // verifyAdmin,
   idValidator,
-  verifyPermission(Permissions.CREATE),
-  schemasValidator(Schemas.movie.update),
-  updateMovie
+  updateMovieHandler
 );
 
-router.delete(
-  "/delete/:id",
-  idValidator,
-  verifyPermission(Permissions.DELETE),
-  deleteMovie
-);
+router.delete("/delete/:id", idValidator, deleteMovieHandler);
 
 export default router;

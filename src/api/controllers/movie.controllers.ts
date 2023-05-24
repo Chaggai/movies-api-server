@@ -1,62 +1,68 @@
 import { RequestHandler } from "express";
+import { omit } from "lodash";
+import createError from "http-errors";
 
-import MovieModel, { MovieDocument } from "../models/movie.model";
+import movieModel, { MovieDocument } from "../models/movie.model";
+import {
+  createMovie,
+  deleteMovie,
+  getAllMovies,
+  getOneMovie,
+  updateMovie,
+} from "../services/movie.srvices";
 
-export const createMovie: RequestHandler<
-  unknown,
-  unknown,
-  MovieDocument,
-  unknown
-> = async (req, res, next) => {
+export const createMovieHandler: RequestHandler = async (req, res, next) => {
   try {
-    const movie = new MovieModel(req.body);
-    movie.save();
-    res.status(201).json(movie);
+    const createdMovie = await createMovie(req.body);
+    res.send(createdMovie);
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
 
-export const readAllMovies: RequestHandler = async (req, res, next) => {
+export const getAllMoviesHandler: RequestHandler = async (req, res, next) => {
   try {
-    const movies = await MovieModel.find({});
-    res.status(200).json(movies);
-  } catch (error) {
+    const allMovies = await getAllMovies();
+    res.status(200).send(allMovies);
+  } catch (error: any) {
     next(error);
   }
 };
 
-export const readMovie: RequestHandler = async (req, res, next) => {
+export const getOneMovieHandler: RequestHandler = async (req, res, next) => {
   try {
-    const movie = await MovieModel.findById(req.params.id);
-    res.status(200).json(movie);
-  } catch (error) {
+    const movie = await getOneMovie({ _id: req.params.id });
+
+    if (!movie) {
+      return next(createError.NotFound("Movie not found"));
+    }
+
+    res.send(movie);
+  } catch (error: any) {
     next(error);
   }
 };
 
-export const updateMovie: RequestHandler<
+export const updateMovieHandler: RequestHandler<
   { id: string },
   unknown,
   MovieDocument
 > = async (req, res, next) => {
   try {
-    const updatedMovie = await MovieModel.findByIdAndUpdate(
-      req.params.id,
-      req.body
-    );
-
-    res.status(200).json(updatedMovie);
-  } catch (error) {
+    await updateMovie({ _id: req.params.id }, req.body);
+    res.send("Movie updated");
+  } catch (error: any) {
     next(error);
   }
 };
 
-export const deleteMovie: RequestHandler = async (req, res, next) => {
+export const deleteMovieHandler: RequestHandler = async (req, res, next) => {
   try {
-    await MovieModel.findByIdAndDelete(req.params.id);
-    res.status(200).json("deleted");
-  } catch (error) {
-    next(error);
+    await deleteMovie({ _id: req.params.id });
+    res.send("Movie deleted");
+  } catch (error: any) {
+    console.log(error);
+    return res.status(409).send(error.message);
   }
 };

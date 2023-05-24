@@ -20,24 +20,24 @@ const router = express.Router();
 
 router.post(
   "/create",
-  verifyAdmin,
+  // verifyAdmin,
   schemasValidator(Schemas.user.create),
   createUserHandler
 );
 
-router.get("/get", verifyToken, getAllUsersHandler);
+router.get("/get", getAllUsersHandler);
 
-router.get("/get/:id", verifyToken, idValidator, getOneUserHandler);
+router.get("/get/:id", idValidator, getOneUserHandler);
 
 router.put(
   "/update/:id",
-  verifyAdmin,
+  // verifyAdmin,
   idValidator,
   schemasValidator(Schemas.user.update),
   updateUserHandler
 );
 
-router.delete("/delete/:id", verifyAdmin, idValidator, deleteUserHandler);
+router.delete("/delete/:id", idValidator, deleteUserHandler);
 router.post("/login", schemasValidator(Schemas.user.login), loginHandler);
 
 export default router;
